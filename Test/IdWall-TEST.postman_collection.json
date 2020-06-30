@@ -1,0 +1,969 @@
+{
+	"info": {
+		"_postman_id": "f5221a78-b922-4b97-b954-10835d24ca17",
+		"name": "IdWall-TEST",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Crate sucessful",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "7a39ff78-1702-4dd5-b5f3-5e877936f486",
+						"exec": [
+							"function randomNumber(n) {\r",
+							"    let ranNum = Math.round(Math.random() * n);\r",
+							"    return ranNum;\r",
+							"}\r",
+							"\r",
+							"function mod(dividend, divider) {\r",
+							"    return Math.round(dividend - (Math.floor(dividend / divider) * divider));\r",
+							"}\r",
+							"\r",
+							"function generateCPF() {\r",
+							"    let n = 9;\r",
+							"    let n1 = randomNumber(n);\r",
+							"    let n2 = randomNumber(n);\r",
+							"    let n3 = randomNumber(n);\r",
+							"    let n4 = randomNumber(n);\r",
+							"    let n5 = randomNumber(n);\r",
+							"    let n6 = randomNumber(n);\r",
+							"    let n7 = randomNumber(n);\r",
+							"    let n8 = randomNumber(n);\r",
+							"    let n9 = randomNumber(n);\r",
+							"    let d1 = n9 * 2 + n8 * 3 + n7 * 4 + n6 * 5 + n5 * 6 + n4 * 7 + n3 * 8 + n2 * 9 + n1 * 10;\r",
+							"    d1 = 11 - (mod(d1, 11));\r",
+							"    if (d1 >= 10) d1 = 0;\r",
+							"    let d2 = d1 * 2 + n9 * 3 + n8 * 4 + n7 * 5 + n6 * 6 + n5 * 7 + n4 * 8 + n3 * 9 + n2 * 10 + n1 * 11;\r",
+							"    d2 = 11 - (mod(d2, 11));\r",
+							"    if (d2 >= 10) d2 = 0;\r",
+							"\r",
+							"    return '' + n1 + n2 + n3 + n4 + n5 + n6 + n7 + n8 + n9 + d1 + d2;\r",
+							"}\r",
+							"\r",
+							"pm.globals.set('randomCPF', generateCPF());\r",
+							"\r",
+							"function generateDate(){\r",
+							"    let year = Math.floor(1950 + (2000 - 1950) * Math.random());\r",
+							"\r",
+							"    function format (unity){\r",
+							"        let quantity;\r",
+							"        if(unity == 'day'){\r",
+							"            quantity = 30\r",
+							"        } else {\r",
+							"            quantity = 12\r",
+							"        }\r",
+							"\r",
+							"        unity = Math.floor(1 + (quantity - 1) * Math.random());\r",
+							"        unity < 10 ? unity = `0${unity}` : unity\r",
+							"\r",
+							"        return unity\r",
+							"    }\r",
+							"\r",
+							"    return `${format('day')}/${format('month')}/${year}`\r",
+							"}\r",
+							"\r",
+							"pm.globals.set('randomDate', generateDate());\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "403eebfc-f6ba-4926-94af-3ba2be9d8810",
+						"exec": [
+							"validateSchema = (json, schema) => {\r",
+							"    const expectedResult = {};\r",
+							"    const validateResult = tv4.validateResult(json, schema);\r",
+							"    const error = (validateResult && validateResult.error) ? validateResult.error : expectedResult;\r",
+							"    pm.expect(error).to.be.equal(expectedResult, error.message);\r",
+							"};\r",
+							"\r",
+							"const regexUUIDv4 = \"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$\";\r",
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"const PROPERTY_TYPES = {\r",
+							"    ARRAY: 'array',\r",
+							"    BOOLEAN: 'boolean',\r",
+							"    INTEGER: 'integer',\r",
+							"    OBJECT: 'object',\r",
+							"    STRING: 'string'\r",
+							"};\r",
+							"\r",
+							"const schema = {\r",
+							"    type: PROPERTY_TYPES.OBJECT,\r",
+							"    properties: {\r",
+							"        result: {\r",
+							"            type: PROPERTY_TYPES.OBJECT,\r",
+							"            properties: {\r",
+							"                numero: PROPERTY_TYPES.STRING,\r",
+							"                minLength: 36,\r",
+							"                maxLength: 36\r",
+							"            },\r",
+							"            required: ['numero'],\r",
+							"            additionalProperties: false\r",
+							"        },\r",
+							"        status_code: {\r",
+							"            type: PROPERTY_TYPES.INTEGER\r",
+							"        },\r",
+							"    },\r",
+							"    required: ['result', 'status_code'],\r",
+							"    additionalProperties: false\r",
+							"};\r",
+							"\r",
+							"pm.test('Status code is 200', () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Numero should be in UUID v4 format', () => {\r",
+							"    pm.expect(jsonData.result.numero).to.match(new RegExp(regexUUIDv4));\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body have a status_code 200', () => {\r",
+							"    pm.expect(jsonData.status_code).to.be.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body should match with schema', () => {\r",
+							"    validateSchema(jsonData, schema);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"matriz\": \"consultaPessoaDefault\",\r\n    \"parametros\": {\r\n        \"cpf_data_de_nascimento\": \"{{randomDate}}\",\r\n        \"cpf_nome\": \"{{$randomFullName}}\",\r\n        \"cpf_numero\": \"{{randomCPF}}\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-v2.idwall.co/relatorios",
+					"protocol": "https",
+					"host": [
+						"api-v2",
+						"idwall",
+						"co"
+					],
+					"path": [
+						"relatorios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Try to create by sending the empty body",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "9b1bf997-ad67-4f0b-b74a-1dc6e6a06fd7",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "9318831e-332f-43e3-a435-21d11022b21b",
+						"exec": [
+							"validateSchema = (json, schema) => {\r",
+							"    const expectedResult = {};\r",
+							"    const validateResult = tv4.validateResult(json, schema);\r",
+							"    const error = (validateResult && validateResult.error) ? validateResult.error : expectedResult;\r",
+							"    pm.expect(error).to.be.equal(expectedResult, error.message);\r",
+							"};\r",
+							"\r",
+							"const regexUUIDv4 = \"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$\";\r",
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"const PROPERTY_TYPES = {\r",
+							"    ARRAY: 'array',\r",
+							"    BOOLEAN: 'boolean',\r",
+							"    INTEGER: 'integer',\r",
+							"    OBJECT: 'object',\r",
+							"    STRING: 'string'\r",
+							"};\r",
+							"\r",
+							"const schemaError = {\r",
+							"    type: PROPERTY_TYPES.OBJECT,\r",
+							"    properties: {\r",
+							"        error: {\r",
+							"            type: PROPERTY_TYPES.STRING\r",
+							"        },\r",
+							"        message: {\r",
+							"            type: PROPERTY_TYPES.STRING\r",
+							"        }, \r",
+							"        validation: {\r",
+							"            type: PROPERTY_TYPES.OBJECT,\r",
+							"            properties: {\r",
+							"                source: {\r",
+							"                    type: PROPERTY_TYPES.STRING\r",
+							"                },\r",
+							"                keys: {\r",
+							"                    type: PROPERTY_TYPES.ARRAY\r",
+							"                }\r",
+							"            },\r",
+							"            required: ['source', 'keys'],\r",
+							"            additionalProperties: false\r",
+							"        },\r",
+							"        status_code: {\r",
+							"            type: PROPERTY_TYPES.INTEGER\r",
+							"        }\r",
+							"    },\r",
+							"    required: ['error', 'message', 'validation', 'status_code'],\r",
+							"    additionalProperties: false\r",
+							"};\r",
+							"\r",
+							"pm.test('Status code is 400', () => {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test('Validating body', () => {\r",
+							"    pm.expect(jsonData.error).to.be.eql(\"Bad Request\")\r",
+							"    pm.expect(jsonData.message).to.be.eql(\"child \\\"matriz\\\" fails because [\\\"matriz\\\" is required]\")\r",
+							"    pm.expect(jsonData.status_code).to.be.eql(400);\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body should match with schema', () => {\r",
+							"    validateSchema(jsonData, schemaError);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-v2.idwall.co/relatorios",
+					"protocol": "https",
+					"host": [
+						"api-v2",
+						"idwall",
+						"co"
+					],
+					"path": [
+						"relatorios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Try to create by sending the empty parameters",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "beebb2df-48e8-4847-b0f2-acd9783e0c42",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "2bf6dfa3-e55c-431e-8dde-2d23189e7b62",
+						"exec": [
+							"validateSchema = (json, schema) => {\r",
+							"    const expectedResult = {};\r",
+							"    const validateResult = tv4.validateResult(json, schema);\r",
+							"    const error = (validateResult && validateResult.error) ? validateResult.error : expectedResult;\r",
+							"    pm.expect(error).to.be.equal(expectedResult, error.message);\r",
+							"};\r",
+							"\r",
+							"const regexUUIDv4 = \"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$\";\r",
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"const PROPERTY_TYPES = {\r",
+							"    ARRAY: 'array',\r",
+							"    BOOLEAN: 'boolean',\r",
+							"    INTEGER: 'integer',\r",
+							"    OBJECT: 'object',\r",
+							"    STRING: 'string'\r",
+							"};\r",
+							"\r",
+							"const schemaError = {\r",
+							"    type: PROPERTY_TYPES.OBJECT,\r",
+							"    properties: {\r",
+							"        error: {\r",
+							"            type: PROPERTY_TYPES.STRING\r",
+							"        },\r",
+							"        message: {\r",
+							"            type: PROPERTY_TYPES.STRING\r",
+							"        }, \r",
+							"        status_code: {\r",
+							"            type: PROPERTY_TYPES.INTEGER\r",
+							"        }\r",
+							"    },\r",
+							"    required: ['error', 'message', 'status_code'],\r",
+							"    additionalProperties: false\r",
+							"};\r",
+							"\r",
+							"pm.test('Status code is 400', () => {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test('Validating body', () => {\r",
+							"    pm.expect(jsonData.error).to.be.eql(\"Bad Request\")\r",
+							"    pm.expect(jsonData.message).to.be.eql(\"É necessário enviar ao menos um parâmetro para criação do relatório.\")\r",
+							"    pm.expect(jsonData.status_code).to.be.eql(400);\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body should match with schema', () => {\r",
+							"    validateSchema(jsonData, schemaError);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"matriz\": \"consultaPessoaDefault\",\r\n    \"parametros\": {\r\n        \"cpf_data_de_nascimento\": \"\",\r\n        \"cpf_nome\": \"\",\r\n        \"cpf_numero\": \"\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-v2.idwall.co/relatorios",
+					"protocol": "https",
+					"host": [
+						"api-v2",
+						"idwall",
+						"co"
+					],
+					"path": [
+						"relatorios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create sending invalid date",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "fecec71f-adf1-4d87-a76a-0403e8828e45",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "c544a859-d63b-4a98-90fc-d1cbae3bd29a",
+						"exec": [
+							"validateSchema = (json, schema) => {\r",
+							"    const expectedResult = {};\r",
+							"    const validateResult = tv4.validateResult(json, schema);\r",
+							"    const error = (validateResult && validateResult.error) ? validateResult.error : expectedResult;\r",
+							"    pm.expect(error).to.be.equal(expectedResult, error.message);\r",
+							"};\r",
+							"\r",
+							"const regexUUIDv4 = \"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$\";\r",
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"const PROPERTY_TYPES = {\r",
+							"    ARRAY: 'array',\r",
+							"    BOOLEAN: 'boolean',\r",
+							"    INTEGER: 'integer',\r",
+							"    OBJECT: 'object',\r",
+							"    STRING: 'string'\r",
+							"};\r",
+							"\r",
+							"const schema = {\r",
+							"    type: PROPERTY_TYPES.OBJECT,\r",
+							"    properties: {\r",
+							"        result: {\r",
+							"            type: PROPERTY_TYPES.OBJECT,\r",
+							"            properties: {\r",
+							"                numero: PROPERTY_TYPES.STRING,\r",
+							"                minLength: 36,\r",
+							"                maxLength: 36\r",
+							"            },\r",
+							"            required: ['numero'],\r",
+							"            additionalProperties: false\r",
+							"        },\r",
+							"        status_code: {\r",
+							"            type: PROPERTY_TYPES.INTEGER\r",
+							"        },\r",
+							"    },\r",
+							"    required: ['result', 'status_code'],\r",
+							"    additionalProperties: false\r",
+							"};\r",
+							"\r",
+							"pm.test('Status code is 200', () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Numero should be in UUID v4 format', () => {\r",
+							"    pm.expect(jsonData.result.numero).to.match(new RegExp(regexUUIDv4));\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body have a status_code 200', () => {\r",
+							"    pm.expect(jsonData.status_code).to.be.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body should match with schema', () => {\r",
+							"    validateSchema(jsonData, schema);\r",
+							"});\r",
+							"\r",
+							"pm.globals.set(\"numero\", jsonData.result.numero);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"matriz\": \"consultaPessoaDefault\",\r\n    \"parametros\": {\r\n        \"cpf_data_de_nascimento\": \"28/09/1988\",\r\n        \"cpf_nome\": \"Gabriel Oliveira\",\r\n        \"cpf_numero\": \"07614917677\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-v2.idwall.co/relatorios",
+					"protocol": "https",
+					"host": [
+						"api-v2",
+						"idwall",
+						"co"
+					],
+					"path": [
+						"relatorios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Validate return with invalid date",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "61c8aced-7c41-4b6d-852d-f3941ea5383e",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "10f598d4-025b-4135-ac05-38b52cda8af4",
+						"exec": [
+							"const jsonData = pm.response.json();\r",
+							"const message = \"Inválido. [ERROR] Não foi possível validar: Data de nascimento informada está divergente da constante na base de dados da Secretaria da Receita Federal do Brasil. [INVALID] Não foi possível emitir a certidão (POLICIAFEDERAL). Não é possível verificar se a pessoa possui antecedentes criminais, dados não conferem.\"\r",
+							"\r",
+							"pm.test('Status code is 200', () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body have a status_code 200', () => {\r",
+							"    pm.expect(jsonData.status_code).to.be.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Validating response body', () => {\r",
+							"    if(jsonData.result.status == \"CONCLUIDO\"){\r",
+							"        pm.expect(jsonData.result.mensagem).to.be.eql(message)\r",
+							"        pm.expect(jsonData.result.resultado).to.be.eql(\"INVALID\")\r",
+							"    } else {\r",
+							"        pm.expect(jsonData.result.status).to.be.eql(\"PROCESSANDO\")\r",
+							"        pm.expect(jsonData.result.mensagem).to.be.eql(\"Validação Pendente.\")\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-v2.idwall.co/relatorios/{{numero}}",
+					"protocol": "https",
+					"host": [
+						"api-v2",
+						"idwall",
+						"co"
+					],
+					"path": [
+						"relatorios",
+						"{{numero}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create sending invalid name",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "fddfc6eb-8d5c-4dce-9559-226feeae0ad6",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "7198e672-1272-4891-9950-42dd2520ed8b",
+						"exec": [
+							"validateSchema = (json, schema) => {\r",
+							"    const expectedResult = {};\r",
+							"    const validateResult = tv4.validateResult(json, schema);\r",
+							"    const error = (validateResult && validateResult.error) ? validateResult.error : expectedResult;\r",
+							"    pm.expect(error).to.be.equal(expectedResult, error.message);\r",
+							"};\r",
+							"\r",
+							"const regexUUIDv4 = \"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$\";\r",
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"const PROPERTY_TYPES = {\r",
+							"    ARRAY: 'array',\r",
+							"    BOOLEAN: 'boolean',\r",
+							"    INTEGER: 'integer',\r",
+							"    OBJECT: 'object',\r",
+							"    STRING: 'string'\r",
+							"};\r",
+							"\r",
+							"const schema = {\r",
+							"    type: PROPERTY_TYPES.OBJECT,\r",
+							"    properties: {\r",
+							"        result: {\r",
+							"            type: PROPERTY_TYPES.OBJECT,\r",
+							"            properties: {\r",
+							"                numero: PROPERTY_TYPES.STRING,\r",
+							"                minLength: 36,\r",
+							"                maxLength: 36\r",
+							"            },\r",
+							"            required: ['numero'],\r",
+							"            additionalProperties: false\r",
+							"        },\r",
+							"        status_code: {\r",
+							"            type: PROPERTY_TYPES.INTEGER\r",
+							"        },\r",
+							"    },\r",
+							"    required: ['result', 'status_code'],\r",
+							"    additionalProperties: false\r",
+							"};\r",
+							"\r",
+							"pm.test('Status code is 200', () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Numero should be in UUID v4 format', () => {\r",
+							"    pm.expect(jsonData.result.numero).to.match(new RegExp(regexUUIDv4));\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body have a status_code 200', () => {\r",
+							"    pm.expect(jsonData.status_code).to.be.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body should match with schema', () => {\r",
+							"    validateSchema(jsonData, schema);\r",
+							"});\r",
+							"\r",
+							"pm.globals.set(\"numero_2\", jsonData.result.numero);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"matriz\": \"consultaPessoaDefault\",\r\n    \"parametros\": {\r\n        \"cpf_data_de_nascimento\": \"25/05/1987\",\r\n        \"cpf_nome\": \"Gabriel de Oliveira\",\r\n        \"cpf_numero\": \"07614917677\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-v2.idwall.co/relatorios",
+					"protocol": "https",
+					"host": [
+						"api-v2",
+						"idwall",
+						"co"
+					],
+					"path": [
+						"relatorios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Validate return with invalid name",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "405f2173-c6d7-4019-855a-dab8fc23dc32",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "1744d8a2-5154-4086-bd65-bbdee4cc33af",
+						"exec": [
+							"const jsonData = pm.response.json();\r",
+							"const message = \"Inválido. [INVALID] Nome diferente do cadastrado na Receita Federal. [INVALID] Não foi possível emitir a certidão (POLICIAFEDERAL). Não é possível verificar se a pessoa possui antecedentes criminais, dados não conferem.\"\r",
+							"\r",
+							"pm.test('Status code is 200', () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body have a status_code 200', () => {\r",
+							"    pm.expect(jsonData.status_code).to.be.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Validating response body', () => {\r",
+							"    if(jsonData.result.status == \"CONCLUIDO\"){\r",
+							"        pm.expect(jsonData.result.mensagem).to.be.eql(message)\r",
+							"        pm.expect(jsonData.result.resultado).to.be.eql(\"INVALID\")\r",
+							"    } else {\r",
+							"        pm.expect(jsonData.result.status).to.be.eql(\"PROCESSANDO\")\r",
+							"        pm.expect(jsonData.result.mensagem).to.be.eql(\"Validação Pendente.\")\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-v2.idwall.co/relatorios/{{numero_2}}",
+					"protocol": "https",
+					"host": [
+						"api-v2",
+						"idwall",
+						"co"
+					],
+					"path": [
+						"relatorios",
+						"{{numero_2}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cenário não conhecido - Create by sending valid data",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "1d6f9753-a4a6-4503-b3cf-5e38eecd6892",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "1ad61549-fd49-494b-ab49-4d08a14ab60e",
+						"exec": [
+							"validateSchema = (json, schema) => {\r",
+							"    const expectedResult = {};\r",
+							"    const validateResult = tv4.validateResult(json, schema);\r",
+							"    const error = (validateResult && validateResult.error) ? validateResult.error : expectedResult;\r",
+							"    pm.expect(error).to.be.equal(expectedResult, error.message);\r",
+							"};\r",
+							"\r",
+							"const regexUUIDv4 = \"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$\";\r",
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"const PROPERTY_TYPES = {\r",
+							"    ARRAY: 'array',\r",
+							"    BOOLEAN: 'boolean',\r",
+							"    INTEGER: 'integer',\r",
+							"    OBJECT: 'object',\r",
+							"    STRING: 'string'\r",
+							"};\r",
+							"\r",
+							"const schema = {\r",
+							"    type: PROPERTY_TYPES.OBJECT,\r",
+							"    properties: {\r",
+							"        result: {\r",
+							"            type: PROPERTY_TYPES.OBJECT,\r",
+							"            properties: {\r",
+							"                numero: PROPERTY_TYPES.STRING,\r",
+							"                minLength: 36,\r",
+							"                maxLength: 36\r",
+							"            },\r",
+							"            required: ['numero'],\r",
+							"            additionalProperties: false\r",
+							"        },\r",
+							"        status_code: {\r",
+							"            type: PROPERTY_TYPES.INTEGER\r",
+							"        },\r",
+							"    },\r",
+							"    required: ['result', 'status_code'],\r",
+							"    additionalProperties: false\r",
+							"};\r",
+							"\r",
+							"pm.test('Status code is 200', () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Numero should be in UUID v4 format', () => {\r",
+							"    pm.expect(jsonData.result.numero).to.match(new RegExp(regexUUIDv4));\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body have a status_code 200', () => {\r",
+							"    pm.expect(jsonData.status_code).to.be.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body should match with schema', () => {\r",
+							"    validateSchema(jsonData, schema);\r",
+							"});\r",
+							"\r",
+							"pm.globals.set(\"numero_3\", jsonData.result.numero);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"matriz\": \"consultaPessoaDefault\",\r\n    \"parametros\": {\r\n        \"cpf_data_de_nascimento\": \"Data verdadeira\",\r\n        \"cpf_nome\": \"Nome verdadeiro\",\r\n        \"cpf_numero\": \"CPF verdadeiro\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-v2.idwall.co/relatorios",
+					"protocol": "https",
+					"host": [
+						"api-v2",
+						"idwall",
+						"co"
+					],
+					"path": [
+						"relatorios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cenário não conhecido - Validating the true record",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "ea55f436-dde1-4470-9b52-8dd7f7d8a44f",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "a6788a45-5b6b-44e3-902d-754f806b8046",
+						"exec": [
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test('Status code is 200', () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Response body have a status_code 200', () => {\r",
+							"    pm.expect(jsonData.status_code).to.be.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.test('Validating response body', () => {\r",
+							"    if(jsonData.result.status == \"CONCLUIDO\"){\r",
+							"        pm.expect(jsonData.result.mensagem).to.be.eql(\"Válido.\")\r",
+							"        pm.expect(jsonData.result.resultado).to.be.eql(\"VALID\")\r",
+							"    } else {\r",
+							"        pm.expect(jsonData.result.status).to.be.eql(\"PROCESSANDO\")\r",
+							"        pm.expect(jsonData.result.mensagem).to.be.eql(\"Validação Pendente.\")\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-v2.idwall.co/relatorios/{{numero_3}}",
+					"protocol": "https",
+					"host": [
+						"api-v2",
+						"idwall",
+						"co"
+					],
+					"path": [
+						"relatorios",
+						"{{numero_3}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
